@@ -1,0 +1,298 @@
+<!doctype html>
+<html class="no-js" lang="">
+
+<head>
+    <meta charset="utf-8">
+    <script src="js/main.js"></script>
+    <script src="js/bootstrap.js"></script>
+    <link href="css/bootstrap.css" rel="stylesheet"/>
+</head>
+
+
+<body>
+<div class="col-12 card-body">
+    <div  class="container text-center col-12">
+        <div>
+            <form>
+                <div class="container card card-body border border-info">
+                    <div class="container col-6">
+                        <div id="alert"></div>
+                        <div  class="input-group">
+                            <span class="input-group-text input-group-prepend">城市名称</span>
+                            <input id="city" name="city" type="text" class="form-control custom-control-inline" required="required">
+                        </div>
+                        <br>
+                    </div>
+                    <div class="container col-6">
+                        <div  class="input-group container">
+                            <input type="button" class="btn btn-info  form-control" id ="send" value="提交">
+                        </div>
+                        <br>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div id="accordion" class="col-8  card-body container">
+            <div class="card">
+                <div class="card-header">
+                    <a class="card-link d-block" data-toggle="collapse" href="#collapseOne">
+                        城市今日指数
+                    </a>
+                </div>
+                <div id="collapseOne" class="collapse show" data-parent="#accordion">
+                    <div class="card-body pre-scrollable" id="city_detail">
+                        空
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <a class="collapsed card-link btn-block " data-toggle="collapse" href="#collapseTwo">
+                        24小时天气
+                    </a>
+                </div>
+                <div id="collapseTwo" class="collapse" data-parent="#accordion">
+                    <div class="card-body pre-scrollable" id="city_detail_24">
+                        空
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <a class="collapsed card-link btn-block" data-toggle="collapse" href="#collapseThree">
+                        城市穿行指数
+                    </a>
+                </div>
+                <div id="collapseThree" class="collapse" data-parent="#accordion">
+                    <div class="card-body pre-scrollable" id="city_detail_aqi">
+                        空
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <a class="collapsed card-link btn-block" data-toggle="collapse" href="#collapseFour">
+                        城市一周天气情况
+                    </a>
+                </div>
+                <div id="collapseFour" class="collapse" data-parent="#accordion">
+                    <div class="card-body pre-scrollable" id="city_detail_week">
+                        空
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="text-center text-muted">数据由阿里云提供<br>&copy;CopyRight By HZVTC</div>
+</body>
+<script>
+    $("#send").click(function(){
+        let html = '<div class="alert alert-primary"><strong>请等待!</strong></div>';
+        $("#city_detail").html("空");
+        $("#city_detail_24").html("空");
+        $("#city_detail_aqi").html("空");
+        $("#city_detail_week").html("空");
+        setInterval(function () {
+            $("#send").removeClass("disabled");
+        },30)
+        $('#alert').html(html);
+        function getdate(){
+            $Date = $("#date");
+            $time = new Date();
+            $month=0;
+            $Day=0;
+            if(($time.getUTCMonth()+1).toString().length<2){
+                $month = "0"+($time.getUTCMonth()+1);
+            }else{
+                $month =($time.getUTCMonth()+1);
+            }
+            if(($time.getDate()+1).toString().length<2){
+                $Day = "0"+($time.getDate());
+            }else{
+                $Day = $time.getDate();
+            }
+            return $time.getFullYear()+"-"+$month+"-"+$Day;
+        }
+        $.ajax({
+            url: "weather.php",
+            type: "POST",
+            data:{
+                city:$("#city").val(),
+                date:getdate()
+            },
+            dataType: 'json',
+            //      crossDomain: true,
+            success: function (result) {
+
+                $CheckStatus = CheckStatus(result);
+                if ( $CheckStatus == "OK"){
+                    var html = '<div class="alert alert-success"><strong>提交成功!</strong></div>';
+                    $('#alert').html(html);
+                    change24Hours(result['result']['24']);
+                    changecityaqi(result['result']['index']);
+                    changecityweek(result['result']['week']);
+                    changecityDetail(result['result']['normal']);
+                }else{
+                    var html = '<div class="alert alert-danger"><strong>失败!</strong>'+$CheckStatus+' </div>';
+                    $('#alert').html(html);
+                }
+
+            },
+            error:function (responseText) {
+                var html = '<div class="alert alert-danger"><strong>失败!</strong>'+responseText+' </div>';
+                $('#alert').html(html);
+            }
+        });
+    });
+    function changecityDetail(result) {
+        var html = '';
+            $.each(result, function(commentIndex, comment){
+                html += '<div class="row text-center card-body"><div class="col-4">'+commentIndex+'</div><div class="col-md-5">'+comment+'</div></div>';
+            });
+        $('#city_detail').html(html);
+    }
+    function change24Hours(result) {
+        var html = '';
+        function checkindex(index) {
+            $result = "";
+            switch (index){
+                case 0:
+                    $result = "时间";
+                    break;
+                case 1:
+                    $result = "天气";
+                    break;
+                case 2:
+                    $result = "最高气温";
+                    break;
+            }
+            return $result;
+        }
+        for (var i in result){
+            html +='<div class="card text-center">';
+            $.each(result[i], function(commentIndex, comment){
+                html += '<div class="row text-center card-body"><div class="col-4">'+checkindex(commentIndex)+'</div><div class="col-md-5">'+comment+'</div></div>';
+            });
+            html +='</div><br>';
+        };
+        $('#city_detail_24').html(html);
+    }
+    function changecityweek(result) {
+        var html = "";
+        function checkindex(index,comment) {
+            $result = "";
+            switch (index){
+                case 3:
+                    $result = "<div class='card-header text-left'>"+comment+"</div>";
+                    break;
+                case 4:
+                    $result = '<div class="row text-center card-body"><div class="col-4">周数</div><div class="col-md-5">'+comment+'</div></div>';
+                    break;
+                case 5:
+                    $result = '<div class="row text-center card-body"><div class="col-4">日出时间 </div><div class="col-md-5">'+comment+'</div></div>';
+                    break;
+                case 6:
+                    $result = '<div class="row text-center card-body"><div class="col-4">日落时间 </div><div class="col-md-5">'+comment+'</div></div>';
+                    break;
+                case 7:
+                    $result = '<div class="row text-center card-body"><div class="col-4">天气</div><div class="col-md-5">'+comment+'</div></div>';
+                    break;
+                case 8:
+                    $result = '<div class="row text-center card-body"><div class="col-4">最高温度</div><div class="col-md-5">'+comment+'</div></div>';
+                    break;
+                case 9:
+                    $result = '<div class="row text-center card-body"><img src = img/'+comment+'.png></div>';
+                    break;
+                case 10:
+                    $result = '<div class="row text-center card-body"><div class="col-4">风向 </div><div class="col-md-5">'+comment+'</div></div>';
+                    break;
+                case 11:
+                    $result = '<div class="row text-center card-body"><div class="col-4">风力 </div><div class="col-md-5">'+comment+'</div></div>';
+                    break;
+                case 12:
+                    $result = '<div class="row text-center card-body"><div class="col-4">晚间天气</div><div class="col-md-5">'+comment+'</div></div>';
+                    break;
+                case 13:
+                    $result = '<div class="row text-center card-body"><div class="col-4">最低气温</div><div class="col-md-5">'+comment+'</div></div>';
+                    break;
+                case 14:
+                    $result = '<div class="row text-center card-body"><img src = img/'+comment+'.png></div>';
+                    break;
+                case 15:
+                    $result = '<div class="row text-center card-body"><div class="col-4">晚间风向</div><div class="col-md-5">'+comment+'</div></div>';
+                    break;
+                case 16:
+                    $result = '<div class="row text-center card-body"><div class="col-4">晚间风力</div><div class="col-md-5">'+comment+'</div></div>';
+                    break;
+            }
+            return $result;
+        }
+        for (var i in result){
+            html +='<div class="card">';
+            $.each(result[i], function(commentIndex, comment){
+                html +=checkindex(commentIndex,comment);
+            });
+            html +='</div><br>';
+        };
+        $('#city_detail_week').html(html);
+    }
+    function changecityaqi(result) {
+        var html = "";
+        function checkindex(index,comment) {
+            $result = "";
+            switch (index){
+                case 0:
+                    $result = "<div class='card-header'>"+comment+"</div>";
+                    break;
+                case 1:
+                    $result = "<div class='card-body  text-center'>"+comment+"</div>";
+                    break;
+                case 2:
+                    $result = "<div class='card-body  text-center'>"+comment+"</div>";
+                    break;
+            }
+            return $result;
+        }
+        for (var i in result){
+            html +='<div class="card">';
+            $.each(result[i], function(commentIndex, comment){
+                html +=checkindex(commentIndex,comment);
+            });
+            html +='</div><br>';
+        };
+        $('#city_detail_aqi').html(html);
+    }
+    // function getJsonLength(result) {
+    //     $i = 0;
+    //     for (var i in result) {
+    //         $i++;
+    //     }
+    //     return $i;
+    // }
+    function CheckStatus(result) {//判断用户查询地区是否存在数据,如果无,则返回接口相对应的错误代码
+        if (result['status'] !=="0" ){
+            switch (result['status']){
+                case "202":
+                    return "城市不存在";
+                    break;
+                case "203":
+                    return "此城市没有天气信息";
+                    break;
+                case "210":
+                    return "没有信息";
+                    break;
+                case "111":
+                    return "所输入地区不精确,请重新输入";
+                    break;
+                default:
+                    return "未知错误";
+                    break;
+            }
+        }else if (result['status'] == "0") {
+            return "OK";
+        }
+    }
+</script>
+
+</html>
