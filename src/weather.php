@@ -116,7 +116,7 @@ function ReflushDatabase($city){
     $host = "https://jisutqybmf.market.alicloudapi.com";
     $path = "/weather/query";
     $method = "GET";
-    $appcode = "b04857c141ca49be8b74bd401238d8b8";
+    $appcode = "Your APPCODE";
     $headers = array();
     array_push($headers, "Authorization:APPCODE " . $appcode);
     $querys = "citycode=".$city;
