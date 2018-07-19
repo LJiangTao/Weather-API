@@ -20,7 +20,7 @@ or [HTML5 Boilerplate v5](https://github.com/h5bp/html5-boilerplate/tree/v5.0.0)
 ##DateBase
    You Should Creat dataBase by yourown
    #
-   #i was USE IIS And Php 7.0 Version 
+   #i was Using IIS And Php 7.0 Version 
    #
    #
    
